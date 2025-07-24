@@ -1,23 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset='utf-8'>
-    <title>Roller</title>
+<title>ESP32_rotor_control</title>
 </head>
-<body style="height: 100%; background-size: 100% 100%; background-repeat: no-repeat; background-image: linear-gradient(135deg, #1fc0f6, rgb(243, 255, 24));">
-    
-    <div style="padding: 20%; color: white; font-size: large; text-align: center; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+<body style='background-color: #EEEEEE;'>
 
-        Podstawowa strona zarządzania roletą
+<span style='color: #003366;'>
 
-        <br><br>
+<h1>Servo rotation control</h1>
 
-        <form>
-            <label><h6>Podaj zakres</h6></label>
-            <input type="range">
+<br>
 
-        </form>
+Set rotation: <br>
+<input type='range' min='0' max='360' value='0' class='slider' id='ID_LED_INTENSITY'>
+Current value: <span id='ID_LED_INTENSITY_VALUE'>-</span><br>
 
-    </div>
+</span>
+
 </body>
+<script>
+
+  var slider = document.getElementById('ID_LED_INTENSITY');
+  var output = document.getElementById('ID_LED_INTENSITY_VALUE');
+  slider.addEventListener('change', slider_changed);
+
+  var Socket;
+  
+  function init() {
+    Socket = new WebSocket('ws://' + window.location.hostname + ':81/');
+    Socket.onmessage = function(event) {
+      processCommand(event);
+    };
+  }
+  
+  function slider_changed () {
+    var l_LED_intensity = slider.value;
+    console.log(l_LED_intensity);
+    var msg = { 
+      type: 'LED_intensity',
+      value: l_LED_intensity
+    };
+    Socket.send(JSON.stringify(msg)); 
+  }
+
+  function processCommand(event) {
+	  var obj = JSON.parse(event.data);
+    var type = obj.type;
+    if (type.localeCompare("LED_intensity") == 0) { 
+      var l_LED_intensity = parseInt(obj.value); 
+      console.log(l_LED_intensity); 
+      slider.value = l_LED_intensity; 
+      output.innerHTML = l_LED_intensity;
+    }
+  }
+  
+  window.onload = function(event) {
+    init();
+  }
+</script>
 </html>
