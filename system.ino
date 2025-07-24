@@ -1,21 +1,12 @@
-// ---------------------------------------------------------------------------------------
-//
-// Code for a webserver on the ESP32 to control LEDs (device used for tests: ESP32-WROOM-32D).
-// The code allows user to switch between three LEDs and set the intensity of the LED selected
-//
-// For installation, the following libraries need to be installed:
-// * Websockets by Markus Sattler (can be tricky to find -> search for "Arduino Websockets"
-// * ArduinoJson by Benoit Blanchon
-//
-// Written by mo thunderz (last update: 19.11.2021)
-//
-// ---------------------------------------------------------------------------------------
-
 #include <WiFi.h>                                     // needed to connect to WiFi
 #include <WebServer.h>                                // needed to create a simple webserver (make sure tools -> board is set to ESP32, otherwise you will get a "WebServer.h: No such file or directory" error)
 #include <WebSocketsServer.h>                         // needed for instant communication between client and server through Websockets
 #include <ArduinoJson.h>                              // needed for JSON encapsulation (send multiple variables with one string)
 #include <ESP32Servo.h>
+
+
+#define MOTO_PIN = 4
+
 
 // SSID and password of Wifi connection:
 const char* ssid = "";  
@@ -90,8 +81,12 @@ String SendHTML()
   return ptr;
 }
 
-// global variables of the LED selected and the intensity of that LED
-int LED_intensity = 50;
+// global variable for servo moto
+
+int moto_position = 0;
+
+
+
 
 // some standard stuff needed to do "analogwrite" on the ESP32 -> an ESP32 does not have "analogwrite" and uses ledcWrite instead
 const int freq = 5000;
@@ -104,7 +99,7 @@ const int resolution = 8;
 WebServer server(80);                                 // the server uses port 80 (standard port for websites
 WebSocketsServer webSocket = WebSocketsServer(81);    // the websocket uses port 81 (standard port for websockets
 
-Servo serv; //Create instance of servo
+Servo moto; //Create instance of servo
 
 void setup() {
 
@@ -128,7 +123,7 @@ void setup() {
   webSocket.begin();                                  // start websocket
   webSocket.onEvent(webSocketEvent);                  // define a callback function -> what does the ESP32 need to do when an event from the websocket is received? -> run function "webSocketEvent()"
 
-  serv.attach(4); //attaching servo
+  moto.attach(MOTO_PIN); //attaching servo
 
 }
 
@@ -168,7 +163,7 @@ void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
         if(String(l_type) == "LED_intensity") {
           LED_intensity = int(l_value);
           sendJson("LED_intensity", String(l_value));
-          serv.write(l_value);
+          moto.write(l_value);
         }
 
       }
