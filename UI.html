@@ -16,10 +16,25 @@
 
         <form>
             <label><h6>Podaj zakres</h6></label>
-            <input type="range">
+            <input type="range" id="SLD_SEND_VAL">
 
         </form>
 
     </div>
 </body>
+
+<script>
+    var Socket;
+    document.getElementById('SLD_SEND_VAL').addEventListener("change", sld_send_back);
+    function init(){
+        Socket = new WebSocket('ws://' + window.location.hostname + ':81/');
+        Socket.onmessage = function(event){
+            processComand(event);
+        }
+    }
+    function sld_send_back(){
+        
+    }
+
+</script>
 </html>
